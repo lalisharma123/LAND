@@ -1,36 +1,37 @@
-from fastapi import FastAPI, Query, Body
-from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
-import uvicorn
+from flask import Flask, request, jsonify
 import time
-
 from checker_script import check_card  # তোমার মূল স্ক্রিপ্ট ফাইল
 
-app = FastAPI()
+app = Flask(__name__)
 
-# Static ফাইল (HTML/JS) সার্ভ করার জন্য
-app.mount("/static", StaticFiles(directory="static"), name="static")
+@app.route("/")
+def home():
+    return jsonify({"message": "Flask CC Checker Running"})
 
-@app.get("/")
-def read_root():
-    from fastapi.responses import FileResponse
-    return FileResponse('static/index.html')
-
-@app.get("/check")
-def check_single_card(card: str = Query(..., description="Format: CC|MM|YY|CVV")):
+@app.route("/check", methods=["GET"])
+def check_single_card():
+    card = request.args.get("card")
+    if not card:
+        return jsonify({"error": "card parameter is required"}), 400
+    
     result = check_card(card)
-    return JSONResponse(content=result)
+    return jsonify(result)
 
-@app.post("/bulk-check")
-def check_multiple_cards(cards: list[str] = Body(..., embed=True)):
+@app.route("/bulk-check", methods=["POST"])
+def check_multiple_cards():
+    data = request.get_json()
+    if not data or "cards" not in data:
+        return jsonify({"error": "cards list is required"}), 400
+    
     results = []
-    for card in cards:
+    for card in data["cards"]:
         result = check_card(card)
         results.append(result)
-        time.sleep(0)  # ✅ 2-second delay per card
-    return JSONResponse(content={"results": results})
+        time.sleep(0)  # agar delay chahiye to yaha seconds de do (e.g., time.sleep(2))
+    
+    return jsonify({"results": results})
 
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
-    uvicorn.run("app:app", host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port)
