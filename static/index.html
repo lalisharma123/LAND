@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Credit Card Checker</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+  label { display: block; margin: 1rem 0 0.5rem; }
+  textarea, input[type="text"] { width: 100%; padding: 0.5rem; font-size: 1rem; }
+  button { margin-top: 1rem; padding: 0.6rem 1rem; font-size: 1rem; cursor: pointer; }
+  pre { background: #f4f4f4; padding: 1rem; white-space: pre-wrap; word-break: break-word; }
+</style>
+</head>
+<body>
+
+<h1>Credit Card Checker</h1>
+
+<section>
+  <h2>Single Card Check</h2>
+  <label for="singleCardInput">Enter card (Format: CC|MM|YY|CVV)</label>
+  <input type="text" id="singleCardInput" placeholder="4111111111111111|12|25|123" />
+  <button onclick="checkSingleCard()">Check Single Card</button>
+  <pre id="singleCardResult"></pre>
+</section>
+
+<hr />
+
+<section>
+  <h2>Bulk Card Check</h2>
+  <label for="bulkCardInput">Enter multiple cards (one per line, format: CC|MM|YY|CVV)</label>
+  <textarea id="bulkCardInput" rows="6" placeholder="4111111111111111|12|25|123
+5555555555554444|01|24|321"></textarea>
+  <button onclick="checkBulkCards()">Check Bulk Cards</button>
+  <pre id="bulkCardResult"></pre>
+</section>
+
+  <script>
+  const baseUrl = ""; // যদি একই সার্ভারে হয়, খালি রাখাই ভালো
+
+  async function checkSingleCard() {
+    const card = document.getElementById("singleCardInput").value.trim();
+    if (!card) {
+      alert("Please enter a card");
+      return;
+    }
+    try {
+      const response = await fetch(`${baseUrl}/check?card=${encodeURIComponent(card)}`);
+      const data = await response.json();
+      document.getElementById("singleCardResult").textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+      document.getElementById("singleCardResult").textContent = "Error: " + err.message;
+    }
+  }
+
+  async function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async function checkBulkCards() {
+    const cardsText = document.getElementById("bulkCardInput").value.trim();
+    const resultBox = document.getElementById("bulkCardResult");
+    resultBox.textContent = "";
+
+    if (!cardsText) {
+      alert("Please enter one or more cards");
+      return;
+    }
+
+    const cards = cardsText.split("\n").map(line => line.trim()).filter(Boolean);
+
+    for (let i = 0; i < cards.length; i++) {
+      const card = cards[i];
+      resultBox.textContent += `🔄 Checking: ${card}\n`;
+
+      try {
+        const response = await fetch(`${baseUrl}/check?card=${encodeURIComponent(card)}`);
+        const data = await response.json();
+        resultBox.textContent += `✅ Result: ${JSON.stringify(data)}\n\n`;
+      } catch (err) {
+        resultBox.textContent += `❌ Error: ${err.message}\n\n`;
+      }
+
+      await delay(17000); // 2 সেকেন্ড অপেক্ষা
+    }
+
+    resultBox.textContent += "✅ All done!";
+  }
+  </script>
+
+
+</body>
+</html>
+
