@@ -6,3 +6,4 @@ bs4
 user_agent
 beautifulsoup4
 urllib3
+flask
