@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+gunicorn
+requests
+bs4
+user_agent
+beautifulsoup4
+urllib3
